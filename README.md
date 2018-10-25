@@ -8,7 +8,7 @@ Compiled to an .exe thanks to [Brent Vollebregt](https://github.com/brentvollebr
 1. Run the program
   * If you're using the .exe, double click it.
   * If you're using the Comparing_Lists.py file, open a terminal and run:
-  ```python
+  ```bash
   python Comparing_Lists.py
   ```
 2. In the UI that opens, select the directory you want to search in:
