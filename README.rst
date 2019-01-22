@@ -16,7 +16,7 @@ search_word_files
 
 
 
-A small Python utility program Word files for some given text.
+A small Python utility program for searching Word files for some given text.
 
 
 * Free software: MIT license
