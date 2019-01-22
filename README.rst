@@ -32,13 +32,13 @@ Dependencies
 Usage
 --------
 
-# Ensure you have python3 and the dependencies installed.
-# Open a terminal in the same directory as search_word_docs.py
-# Execute `python3 search_word_docs.py`
-# Select a directory to search for word files.
-# Provide a search term.
-# Select/UnSelect the Recursive Searching Textbox
-# Click Search
+#. Ensure you have python3 and the dependencies installed.
+#. Open a terminal in the same directory as search_word_docs.py
+#. Execute `python3 search_word_docs.py`
+#. Select a directory to search for word files.
+#. Provide a search term.
+#. Select/UnSelect the Recursive Searching Textbox
+#. Click Search
 
 Updates are provided throughout the process, when finished the results will be provided in the bottom-most text box.
 
