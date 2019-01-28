@@ -15,8 +15,6 @@ class WordDocSearcher(object):
 
         doc_paths = self.__gather_doc_paths(document_directory,search_recursively,update_text_callback)
 
-        print('\n'.join(doc_paths))
-
         docs_with_search_term, docs_without_search_term, docs_with_errors = self.__search_docs_for_search_term(doc_paths,search_term, update_text_callback)
 
         docs_with_search_term = "\n".join(docs_with_search_term)
@@ -80,8 +78,6 @@ class WordDocSearcher(object):
         logging.info(f'Searching Word Docs for {search_term}.')
 
         update_text_callback(f'Searching Word Docs for {search_term}.')
-
-        print(doc_paths)
 
         # Get a handle on the Word Application.
         msword = win32.gencache.EnsureDispatch('Word.Application')
