@@ -25,9 +25,15 @@ A small Python utility program for searching Word files for some given text.
 Dependencies
 --------
 
+If you'd only like to use this module, you'll only need the following dependencies:
+
 - fs
 - pywin32
 - PySimpleGui
+
+Which can be installed via the requirements.txt file: `pip install -r requirements.txt`
+
+If you'd like to develop the module as well, you'll need the requirements_dev.txt file: `pip install -r requirements_dev.txt`
 
 Usage
 --------

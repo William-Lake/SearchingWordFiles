@@ -1,0 +1,3 @@
+PySimpleGui
+fs
+pywin32
