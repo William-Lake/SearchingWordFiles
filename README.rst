@@ -2,20 +2,6 @@
 search_word_files
 =================
 
-
-.. image:: https://img.shields.io/pypi/v/search_word_files.svg
-        :target: https://pypi.python.org/pypi/search_word_files
-
-.. image:: https://img.shields.io/travis/William-Lake/search_word_files.svg
-        :target: https://travis-ci.org/William-Lake/search_word_files
-
-.. image:: https://readthedocs.org/projects/search-word-files/badge/?version=latest
-        :target: https://search-word-files.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
-
-
-
 A small Python utility program for searching Word files for some given text.
 
 
