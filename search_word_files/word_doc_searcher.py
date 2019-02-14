@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import fs
 import logging
 import win32com.client as win32
 import os.path
 from pathlib import Path
-from primary_ui import PrimaryUI
 
 class WordDocSearcher(object):
 
@@ -19,11 +20,7 @@ class WordDocSearcher(object):
 
         docs_with_search_term = "\n".join(docs_with_search_term)
 
-        docs_without_search_term = "\n".join(docs_without_search_term)
-
-        docs_with_errors = "\n".join([f'{key}: {value}' for key, value in docs_with_errors.items()])
-
-        update_text_callback(f'Docs Containing {search_term}:\n\n{docs_with_search_term}\n\n\nDocs Not Containing {search_term}:\n\n{docs_without_search_term}\n\n\nDocs With Errors:\n\n{docs_with_errors}', do_replace=True)
+        update_text_callback(docs_with_search_term, do_replace=True)
 
     def __gather_doc_paths(self, document_directory, search_recursively, update_text_callback):
         '''Gathers the paths to Word Documents in the given document directory.
@@ -79,76 +76,106 @@ class WordDocSearcher(object):
 
         update_text_callback(f'Searching Word Docs for {search_term}.')
 
-        # Get a handle on the Word Application.
-        msword = win32.gencache.EnsureDispatch('Word.Application')
-
         docs_with_search_term = []
 
         docs_without_search_term = []
 
         docs_with_errors = {}
 
-        # For each of the doc paths,
-        for doc_index, doc_path in enumerate(doc_paths):
+        # Get a handle on the Word Application.
+        try:
 
-            logging.debug(f'Searching doc {doc_index + 1} out of {len(doc_paths)}: {doc_path}')
+            msword = win32.gencache.EnsureDispatch('Word.Application')
 
-            update_text_callback(f'Searching doc {doc_index + 1} out of {len(doc_paths)}: {doc_path}')
+        except:
 
-            try:
+            msword = None
 
-                # Open the doc invisibly in Word
-                word_doc = msword.Documents.Open(doc_path, Visible = False) 
+        if msword is None: 
 
-                if word_doc is None:
+            logging.warn('For an unknown reason, Word is unavailable. Process halted.')
 
-                    logging.warn(f'The word_doc instance for {doc_path} is None!')
+            update_text_callback('For an unknown reason, Word is unavailable. Process halted.')
 
-                    docs_with_errors[doc_path] = f'The word_doc instance for {doc_path} is None!'
+        else:
+
+            # For each of the doc paths,
+            for doc_index, doc_path in enumerate(doc_paths):
+
+                logging.debug(f'Searching doc {doc_index + 1} out of {len(doc_paths)}: {doc_path}')
+
+                update_text_callback(f'Searching doc {doc_index + 1} out of {len(doc_paths)}: {doc_path}\n')
+
+                logging.debug('Backing up raw doc binary data so unexpected changes during the search process can be overwritten.')
+
+                doc_data = open(doc_path, 'rb').read()
+
+                try:
+
+                    # Open the doc invisibly in Word
+                    word_doc = msword.Documents.Open(doc_path, Visible = False) 
+
+                    if word_doc is None:
+
+                        logging.warn(f'The word_doc instance for {doc_path} is None!')
+
+                        docs_with_errors[doc_path] = f'The word_doc instance for {doc_path} is None!'
+
+                        continue
+
+                except Exception as e:
+
+                    logging.warn(f'Error while trying to open {doc_path}: {str(e)}')
+
+                    docs_with_errors[doc_path] = str(e)
 
                     continue
 
+                search_term_found = False
+
+                sections = word_doc.Sections
+
+                # Look for the search term in the Word Doc.
+                for section in word_doc.Sections:
+
+                    for paragraph in section.Range.Paragraphs:
+
+                        if search_term in paragraph.Range.Text: search_term_found = True
+
+                    for header in section.Headers: 
+
+                        if search_term in header.Range.Text: search_term_found = True
+
+                    for footer in section.Footers: 
+
+                        if search_term in footer.Range.Text: search_term_found = True
+
+                    if search_term_found: break
+
+                # Save the doc path in the appropriate list
+                if search_term_found: docs_with_search_term.append(doc_path)
+
+                else: docs_without_search_term.append(doc_path)
+
+                # Close the Word Document. NOTE: ABSOLUTELY NECESSARY
+                word_doc.Close()
+
+                logging.debug('Overwritting the document with the previously collected data to undo any unexpected changes due to searching.')
+
+                with open(doc_path, 'wb') as out_file: out_file.write(doc_data)
+
+        if msword is not None: 
+            
+            try:
+
+                msword.Quit()
+
             except Exception as e:
 
-                logging.warn(f'Error while trying to open {doc_path}: {str(e)}')
+                logging.warn(f'Error while trying to close Word: {str(e)}')
+                
+            logging.debug(f'Out of {len(doc_paths)} documents, {len(docs_with_search_term)} contained the search term and {len(docs_without_search_term)} did not. {len(docs_with_errors)} had errors while trying to open.')
 
-                docs_with_errors[doc_path] = str(e)
-
-                continue
-
-            search_term_found = False
-
-            sections = word_doc.Sections
-
-            # Look for the search term in the Word Doc.
-            for section in word_doc.Sections:
-
-                for paragraph in section.Range.Paragraphs:
-
-                    if search_term in paragraph.Range.Text: search_term_found = True
-
-                for header in section.Headers: 
-
-                    if search_term in header.Range.Text: search_term_found = True
-
-                for footer in section.Footers: 
-
-                    if search_term in footer.Range.Text: search_term_found = True
-
-                if search_term_found: break
-
-            # Save the doc path in the appropriate list
-            if search_term_found: docs_with_search_term.append(doc_path)
-
-            else: docs_without_search_term.append(doc_path)
-
-            # Close the Word Document. NOTE: ABSOLUTELY NECESSARY
-            word_doc.Close()
-
-        msword.Quit()
-
-        logging.debug(f'Out of {len(doc_paths)} documents, {len(docs_with_search_term)} contained the search term and {len(docs_without_search_term)} did not. {len(docs_with_errors)} had errors while trying to open.')
-
-        update_text_callback(f'Out of {len(doc_paths)} documents, {len(docs_with_search_term)} contained the search term and {len(docs_without_search_term)} did not. {len(docs_with_errors)} had errors while trying to open.')
+            update_text_callback(f'Out of {len(doc_paths)} documents, {len(docs_with_search_term)} contained the search term and {len(docs_without_search_term)} did not. {len(docs_with_errors)} had errors while trying to open.')
 
         return docs_with_search_term, docs_without_search_term, docs_with_errors

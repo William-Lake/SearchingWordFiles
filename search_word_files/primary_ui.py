@@ -1,8 +1,16 @@
+# -*- coding: utf-8 -*-
+
 import PySimpleGUI as sg
 
 class PrimaryUI(sg.Window):
 
     DEFAULT_UPDATE_TEXT = 'Results....'
+
+    SEARCH = 'Search'
+
+    SAVE = 'Save'
+
+    RESET = 'Reset'
 
     def __init__(self):
 
@@ -20,15 +28,20 @@ class PrimaryUI(sg.Window):
 
         self.chk_recursive = sg.Checkbox('Recursive Searching',default=True)
 
-        btn_search = sg.Button('Search')
+        btn_search = sg.Button(self.SEARCH)
 
         self.txt_updates = sg.Multiline(self.DEFAULT_UPDATE_TEXT, size=(50,15))
+
+        self.btn_save = sg.Button(self.SAVE, disabled=True)
+
+        self.btn_clear = sg.Button(self.RESET)
 
         layout = [
             [btn_browse, self.txt_document_directory],
             [self.txt_search_term],
             [btn_search, self.chk_recursive],
-            [self.txt_updates]
+            [self.txt_updates],
+            [self.btn_save,self.btn_clear]
         ]
 
         self.Layout(layout)
@@ -37,17 +50,37 @@ class PrimaryUI(sg.Window):
 
         while True:
 
-            event, value = self.Read()
+            event, values = self.Read()
 
             if event is None: break
 
-            elif event == 'Search':
+            elif event == self.SEARCH:
 
                 if self.data_valid(): 
                     
                     self.txt_updates.Update(self.DEFAULT_UPDATE_TEXT)
                     
                     self.execute_callback(callback)
+
+                    self.btn_save.Update(disabled=False)
+
+            elif event == self.SAVE:
+
+                file_paths = values[3].strip()
+
+                if file_paths:
+
+                    save_file_path = sg.PopupGetFile('Save Results As...', save_as=True, file_types=(('Text Files', '*.txt'),), no_window = True)
+
+                    with open(save_file_path,'w+') as out_file: out_file.write(file_paths)
+
+                self.btn_save.Update(disabled=True)
+
+            elif event == self.RESET:
+
+                self.txt_updates.Update(self.DEFAULT_UPDATE_TEXT)
+
+                self.btn_save.Update(disabled=True)
 
         self.Close()
 
