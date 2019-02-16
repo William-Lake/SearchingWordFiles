@@ -2,6 +2,8 @@
 
 REM  ======================================================================= Main
 
+SET do_run=TRUE
+
 REM We first need to check that Python is installed.
 python -V
 
@@ -9,11 +11,12 @@ REM If True, Python is not installed.
 IF ERRORLEVEL 1 GOTO NoPython
 
 REM Then we need to ensure the dependencies are installed.
-
 FOR /F "tokens=*" %%L IN (requirements.txt) DO CALL :CheckForModule %%L
 
-REM Then we can start the program
-python search_word_files
+IF "%do_run%" == "TRUE" (
+    REM Then we can start the program
+    python search_word_files
+)
 
 GOTO :EOF
 
@@ -30,6 +33,8 @@ ECHO Be sure to select the "Add Python to PATH" checkbox at the bottom of the fi
 ECHO When you've finished, re-run this script to continue.
 ECHO.
 ECHO For more info about running Python on Windows, see here: https://docs.python.org/3/using/windows.html
+
+SET do_run=FALSE
 
 GOTO :EOF
 
@@ -53,8 +58,14 @@ REM  ======================================================================= NoM
 REM Attempts to install module, asking user first.
 
 :NoModule
-SET /p do_install = The Python module %~1% is not installed and is required by this application. Install it? [Y/N]
-IF /I "%do_install%" NEQ "Y"  GOTO :EOF
-pip install %~1%
+SET /p do_install=The Python module %~1% is not installed and is required by this application. Install it? [Y/N]
+
+IF "%do_install%" == "Y" (
+    pip install %~1%
+) ELSE (
+    SET do_run=FALSE
+)
+
+SET do_install = ""
 
 GOTO :EOF
